@@ -25,7 +25,7 @@
 
       <div class="card">
         <h2>Estado actual</h2>
-        <pre id="estado"></pre>
+        <div id="estadoVisual" class="estado-visual"></div>
       </div>
 
       <div class="card">
@@ -38,7 +38,7 @@
         <form id="formPunto" class="form-grid">
           <label>
             Nombre
-            <input type="text" id="puntoNombre" placeholder="Ej. Colegio Miguel Hernández" required>
+            <input type="text" id="puntoNombre" required>
           </label>
 
           <label>
@@ -55,17 +55,17 @@
 
           <label>
             Descripción
-            <textarea id="puntoDescripcion" rows="3" placeholder="Información útil del punto"></textarea>
+            <textarea id="puntoDescripcion" rows="3"></textarea>
           </label>
 
           <label>
             Latitud
-            <input type="number" step="any" id="puntoLat" placeholder="38.2499" required>
+            <input type="number" step="any" id="puntoLat" required>
           </label>
 
           <label>
             Longitud
-            <input type="number" step="any" id="puntoLng" placeholder="-0.8091" required>
+            <input type="number" step="any" id="puntoLng" required>
           </label>
 
           <button type="submit" class="btn-secundario">Guardar punto</button>
@@ -80,9 +80,26 @@
         <div id="map"></div>
       </div>
 
-      <div class="card">
-        <h2>Puntos del plan</h2>
-        <div id="listaPuntos"></div>
+      <div class="grid-doble">
+        <div class="card">
+          <h2>Documentos fuente</h2>
+          <div id="listaDocumentos"></div>
+        </div>
+
+        <div class="card">
+          <h2>Unidades básicas</h2>
+          <div id="listaUnidades"></div>
+        </div>
+
+        <div class="card">
+          <h2>Acciones por escenario</h2>
+          <div id="listaAcciones"></div>
+        </div>
+
+        <div class="card">
+          <h2>Puntos del plan</h2>
+          <div id="listaPuntos"></div>
+        </div>
       </div>
     </section>
   </main>
