@@ -2,13 +2,13 @@ let map;
 let markers = [];
 
 window.onload = async () => {
- const resMunicipio = await fetch("/api/municipio");
-const datosMunicipio = await resMunicipio.json();
+  const resMunicipio = await fetch("/api/municipio");
+  const datosMunicipio = await resMunicipio.json();
 
-map = L.map("map").setView(
-  [datosMunicipio.centro.lat, datosMunicipio.centro.lng],
-  datosMunicipio.zoom
-);
+  map = L.map("map").setView(
+    [datosMunicipio.centro.lat, datosMunicipio.centro.lng],
+    datosMunicipio.zoom
+  );
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
@@ -18,6 +18,7 @@ map = L.map("map").setView(
 
   await cargarEstado();
   await cargarTareas();
+  await cargarPuntos();
 };
 
 async function cargarEstado() {
@@ -58,6 +59,16 @@ async function cargarTareas() {
 
     marker.bindPopup(`<b>${t.titulo}</b><br>${t.grupo}<br>${t.estado}`);
     markers.push(marker);
+  });
+}
+
+async function cargarPuntos() {
+  const res = await fetch("/api/puntos");
+  const puntos = await res.json();
+
+  puntos.forEach(p => {
+    const marker = L.marker([p.lat, p.lng]).addTo(map);
+    marker.bindPopup(`<b>${p.nombre}</b><br>${p.tipo}`);
   });
 }
 
