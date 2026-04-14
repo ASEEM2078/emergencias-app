@@ -6,29 +6,38 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "data", "db.json");
+
 const municipio = {
+  nombre: "Crevillent",
+  centro: {
+    lat: 38.2499,
+    lng: -0.8091
+  },
+  zoom: 13
+};
+
 const puntosPlan = [
   {
-    nombre: "Ayuntamiento",
+    nombre: "Ayuntamiento de Crevillent",
     tipo: "edificio",
-    lat: 39.934,
-    lng: -0.602
+    lat: 38.2499,
+    lng: -0.8091
   },
   {
-    nombre: "Centro de salud",
+    nombre: "Centro de Salud de Crevillent",
     tipo: "sanitario",
-    lat: 39.936,
-    lng: -0.604
+    lat: 38.2468,
+    lng: -0.8080
   },
   {
-    nombre: "Zona inundable barranco",
+    nombre: "Zona de posible acumulación de agua",
     tipo: "riesgo",
-    lat: 39.937,
-    lng: -0.607
+    lat: 38.2520,
+    lng: -0.8140
   }
 ];
 
-app.use(cors());const DB_FILE = path.join(__dirname, "data", "db.json");
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -62,20 +71,26 @@ async function writeDB(data) {
   return fs.writeJson(DB_FILE, data, { spaces: 2 });
 }
 
-app.get("/api/estado", async (req, res) => {
-  const db = await readDB();
-  res.json(db.emergencia);
-});
 app.get("/api/municipio", (req, res) => {
   res.json(municipio);
 });
+
 app.get("/api/puntos", (req, res) => {
   res.json(puntosPlan);
 });
 
+app.get("/api/estado", async (req, res) => {
+  const db = await readDB();
+  res.json(db.emergencia);
+});
+
+app.get("/api/tareas", async (req, res) => {
+  const db = await readDB();
+  res.json(db.tareas);
+});
+
 app.post("/api/activar", async (req, res) => {
   const { tipo, nivel } = req.body;
-
   const db = await readDB();
 
   db.emergencia = {
@@ -88,18 +103,18 @@ app.post("/api/activar", async (req, res) => {
   db.tareas = [
     {
       id: 1,
-      titulo: "Revisar puntos inundables",
+      titulo: "Revisar punto inundable en acceso sur",
       grupo: "Brigada",
-      lat: 39.95,
-      lng: -0.68,
+      lat: 38.2455,
+      lng: -0.8120,
       estado: "pendiente"
     },
     {
       id: 2,
-      titulo: "Vigilar cauce principal",
+      titulo: "Vigilar cauce y zonas de escorrentía",
       grupo: "Protección Civil",
-      lat: 39.96,
-      lng: -0.69,
+      lat: 38.2525,
+      lng: -0.8045,
       estado: "pendiente"
     }
   ];
