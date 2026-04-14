@@ -1,3 +1,19 @@
+let map;
+let markers = [];
+
+window.onload = async () => {
+  map = L.map("map").setView([39.95, -0.68], 13);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  document.getElementById("activarBtn").addEventListener("click", activar);
+
+  await cargarEstado();
+  await cargarTareas();
+};
+
 async function cargarEstado() {
   const res = await fetch("/api/estado");
   const data = await res.json();
@@ -11,6 +27,9 @@ async function cargarTareas() {
   const contenedor = document.getElementById("tareas");
   contenedor.innerHTML = "";
 
+  markers.forEach(marker => map.removeLayer(marker));
+  markers = [];
+
   tareas.forEach(t => {
     const div = document.createElement("div");
 
@@ -23,6 +42,16 @@ async function cargarTareas() {
     `;
 
     contenedor.appendChild(div);
+
+    const color = t.estado === "realizada" ? "green" : "red";
+
+    const marker = L.circleMarker([t.lat, t.lng], {
+      color: color,
+      radius: 8
+    }).addTo(map);
+
+    marker.bindPopup(`<b>${t.titulo}</b><br>${t.grupo}<br>${t.estado}`);
+    markers.push(marker);
   });
 }
 
@@ -36,8 +65,8 @@ async function activar() {
     })
   });
 
-  cargarEstado();
-  cargarTareas();
+  await cargarEstado();
+  await cargarTareas();
 }
 
 async function completar(id) {
@@ -49,10 +78,5 @@ async function completar(id) {
     })
   });
 
-  cargarTareas();
+  await cargarTareas();
 }
-
-document.getElementById("activarBtn").addEventListener("click", activar);
-
-cargarEstado();
-cargarTareas();
