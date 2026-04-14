@@ -3,29 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emergencias App</title>
+  <title>Plan de Emergencias</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <header class="topbar">
+    <div>
+      <h1 id="tituloApp">Plan de Emergencias</h1>
+      <p id="nombreMunicipio" class="subtitulo">Municipio: cargando...</p>
+    </div>
+    <div class="estado-badge" id="estadoBadge">Sin activar</div>
+  </header>
 
-  <h1>Emergencias App</h1>
+  <main class="layout">
+    <section class="panel panel-izquierda">
+      <div class="card">
+        <h2>Activación</h2>
+        <button id="activarBtn" class="btn-principal">Activar lluvias nivel amarillo</button>
+      </div>
 
-  <div>
-    <button id="activarBtn">Activar lluvias nivel amarillo</button>
-  </div>
+      <div class="card">
+        <h2>Estado actual</h2>
+        <pre id="estado"></pre>
+      </div>
 
-  <h2>Estado</h2>
-  <pre id="estado"></pre>
+      <div class="card">
+        <h2>Tareas operativas</h2>
+        <div id="tareas"></div>
+      </div>
 
-  <h2>Tareas</h2>
-  <div id="tareas"></div>
+      <div class="card">
+        <h2>Crear punto de interés</h2>
+        <form id="formPunto" class="form-grid">
+          <label>
+            Nombre
+            <input type="text" id="puntoNombre" placeholder="Ej. Colegio Miguel Hernández" required>
+          </label>
 
-  <h2>Mapa</h2>
-  <div id="map" style="height: 400px; margin-top: 20px;"></div>
+          <label>
+            Tipo
+            <select id="puntoTipo" required>
+              <option value="colegio">Colegio</option>
+              <option value="ayuntamiento">Ayuntamiento</option>
+              <option value="sanitario">Sanitario</option>
+              <option value="zona_inundable">Zona inundable</option>
+              <option value="punto_mando">Punto de mando</option>
+              <option value="recurso">Recurso</option>
+            </select>
+          </label>
+
+          <label>
+            Descripción
+            <textarea id="puntoDescripcion" rows="3" placeholder="Información útil del punto"></textarea>
+          </label>
+
+          <label>
+            Latitud
+            <input type="number" step="any" id="puntoLat" placeholder="38.2499" required>
+          </label>
+
+          <label>
+            Longitud
+            <input type="number" step="any" id="puntoLng" placeholder="-0.8091" required>
+          </label>
+
+          <button type="submit" class="btn-secundario">Guardar punto</button>
+        </form>
+        <p id="mensajePunto" class="mensaje"></p>
+      </div>
+    </section>
+
+    <section class="panel panel-derecha">
+      <div class="card mapa-card">
+        <h2>Mapa operativo</h2>
+        <div id="map"></div>
+      </div>
+
+      <div class="card">
+        <h2>Puntos del plan</h2>
+        <div id="listaPuntos"></div>
+      </div>
+    </section>
+  </main>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
