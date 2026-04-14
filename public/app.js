@@ -1,5 +1,6 @@
 let map;
 let markers = [];
+let puntosFijos = [];
 
 window.onload = async () => {
   const resMunicipio = await fetch("/api/municipio");
@@ -63,12 +64,16 @@ async function cargarTareas() {
 }
 
 async function cargarPuntos() {
+  puntosFijos.forEach(marker => map.removeLayer(marker));
+  puntosFijos = [];
+
   const res = await fetch("/api/puntos");
   const puntos = await res.json();
 
   puntos.forEach(p => {
     const marker = L.marker([p.lat, p.lng]).addTo(map);
     marker.bindPopup(`<b>${p.nombre}</b><br>${p.tipo}`);
+    puntosFijos.push(marker);
   });
 }
 
