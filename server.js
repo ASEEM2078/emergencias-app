@@ -16,22 +16,28 @@ const municipio = {
   zoom: 13
 };
 
-const puntosPlan = [
+const puntosPlanIniciales = [
   {
+    id: 1,
     nombre: "Ayuntamiento de Crevillent",
-    tipo: "edificio",
+    tipo: "ayuntamiento",
+    descripcion: "Edificio principal municipal",
     lat: 38.2499,
     lng: -0.8091
   },
   {
+    id: 2,
     nombre: "Centro de Salud de Crevillent",
     tipo: "sanitario",
+    descripcion: "Centro sanitario principal",
     lat: 38.2468,
     lng: -0.8080
   },
   {
+    id: 3,
     nombre: "Zona de posible acumulación de agua",
-    tipo: "riesgo",
+    tipo: "zona_inundable",
+    descripcion: "Punto sensible por lluvias intensas",
     lat: 38.2520,
     lng: -0.8140
   }
@@ -56,11 +62,38 @@ async function initDB() {
           fecha: null
         },
         tareas: [],
+        puntos: puntosPlanIniciales,
         logs: []
       },
       { spaces: 2 }
     );
+    return;
   }
+
+  const db = await fs.readJson(DB_FILE);
+
+  if (!db.emergencia) {
+    db.emergencia = {
+      activa: false,
+      tipo: null,
+      nivel: null,
+      fecha: null
+    };
+  }
+
+  if (!db.tareas) {
+    db.tareas = [];
+  }
+
+  if (!db.puntos) {
+    db.puntos = puntosPlanIniciales;
+  }
+
+  if (!db.logs) {
+    db.logs = [];
+  }
+
+  await fs.writeJson(DB_FILE, db, { spaces: 2 });
 }
 
 async function readDB() {
@@ -75,8 +108,50 @@ app.get("/api/municipio", (req, res) => {
   res.json(municipio);
 });
 
-app.get("/api/puntos", (req, res) => {
-  res.json(puntosPlan);
+app.get("/api/puntos", async (req, res) => {
+  const db = await readDB();
+  res.json(db.puntos || []);
+});
+
+app.post("/api/puntos", async (req, res) => {
+  const { nombre, tipo, descripcion, lat, lng } = req.body;
+
+  if (!nombre || !tipo || lat === undefined || lng === undefined) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Faltan datos obligatorios del punto"
+    });
+  }
+
+  const db = await readDB();
+
+  const nuevoPunto = {
+    id: Date.now(),
+    nombre: String(nombre).trim(),
+    tipo: String(tipo).trim(),
+    descripcion: descripcion ? String(descripcion).trim() : "",
+    lat: Number(lat),
+    lng: Number(lng)
+  };
+
+  if (Number.isNaN(nuevoPunto.lat) || Number.isNaN(nuevoPunto.lng)) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Latitud o longitud no válidas"
+    });
+  }
+
+  db.puntos.push(nuevoPunto);
+
+  db.logs.push({
+    fecha: new Date().toISOString(),
+    accion: "crear_punto",
+    detalle: `Punto creado: ${nuevoPunto.nombre} (${nuevoPunto.tipo})`
+  });
+
+  await writeDB(db);
+
+  res.json({ ok: true, punto: nuevoPunto });
 });
 
 app.get("/api/estado", async (req, res) => {
