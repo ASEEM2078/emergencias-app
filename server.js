@@ -6,8 +6,16 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "data", "db.json");
+const municipio = {
+  nombre: "Benafer",
+  centro: {
+    lat: 39.935,
+    lng: -0.603
+  },
+  zoom: 14
+};
 
-app.use(cors());
+app.use(cors());const DB_FILE = path.join(__dirname, "data", "db.json");
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -45,7 +53,9 @@ app.get("/api/estado", async (req, res) => {
   const db = await readDB();
   res.json(db.emergencia);
 });
-
+app.get("/api/municipio", (req, res) => {
+  res.json(municipio);
+});
 app.get("/api/tareas", async (req, res) => {
   const db = await readDB();
   res.json(db.tareas);
