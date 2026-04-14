@@ -2,7 +2,13 @@ let map;
 let markers = [];
 
 window.onload = async () => {
-  map = L.map("map").setView([39.95, -0.68], 13);
+ const resMunicipio = await fetch("/api/municipio");
+const datosMunicipio = await resMunicipio.json();
+
+map = L.map("map").setView(
+  [datosMunicipio.centro.lat, datosMunicipio.centro.lng],
+  datosMunicipio.zoom
+);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
