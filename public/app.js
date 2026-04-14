@@ -7,7 +7,8 @@ window.onload = async () => {
   const datosMunicipio = await resMunicipio.json();
 
   document.getElementById("tituloApp").textContent = "Plan de Emergencias";
-  document.getElementById("nombreMunicipio").textContent = `Municipio: ${datosMunicipio.nombre}`;
+  document.getElementById("nombreMunicipio").textContent =
+    `${datosMunicipio.nombre} · ${datosMunicipio.plan_nombre} · ${datosMunicipio.plan_revision}`;
 
   map = L.map("map").setView(
     [datosMunicipio.centro.lat, datosMunicipio.centro.lng],
@@ -24,13 +25,27 @@ window.onload = async () => {
   await cargarEstado();
   await cargarTareas();
   await cargarPuntos();
+  await cargarDocumentos();
+  await cargarUnidades();
+  await cargarAcciones();
 };
 
 async function cargarEstado() {
   const res = await fetch("/api/estado");
   const data = await res.json();
 
-  document.getElementById("estado").textContent = JSON.stringify(data, null, 2);
+  const contenedor = document.getElementById("estadoVisual");
+
+  const fecha = data.fecha
+    ? new Date(data.fecha).toLocaleString("es-ES")
+    : "Sin fecha";
+
+  contenedor.innerHTML = `
+    <div class="estado-linea"><strong>Estado</strong><span>${data.activa ? "Activa" : "No activa"}</span></div>
+    <div class="estado-linea"><strong>Tipo</strong><span>${data.tipo || "-"}</span></div>
+    <div class="estado-linea"><strong>Nivel</strong><span>${data.nivel || "-"}</span></div>
+    <div class="estado-linea"><strong>Fecha</strong><span>${fecha}</span></div>
+  `;
 
   const badge = document.getElementById("estadoBadge");
 
@@ -102,18 +117,82 @@ async function cargarPuntos() {
   puntos.forEach(p => {
     const marker = L.marker([p.lat, p.lng]).addTo(map);
     marker.bindPopup(
-      `<b>${p.nombre}</b><br>${p.tipo}<br>${p.descripcion || ""}`
+      `<b>${p.nombre}</b><br>${p.categoria}<br>${p.subcategoria}<br>${p.observaciones || ""}`
     );
     markersPuntos.push(marker);
 
     const item = document.createElement("div");
-    item.className = "punto-item";
+    item.className = "item-bloque";
     item.innerHTML = `
+      <div class="codigo">${p.codigo || "SIN-COD"}</div>
       <p><strong>${p.nombre}</strong></p>
-      <p><strong>Tipo:</strong> ${p.tipo}</p>
-      <p><strong>Lat:</strong> ${p.lat}</p>
-      <p><strong>Lng:</strong> ${p.lng}</p>
+      <p><strong>Categoría:</strong> ${p.categoria}</p>
+      <p><strong>Subcategoría:</strong> ${p.subcategoria}</p>
       <p>${p.descripcion || ""}</p>
+      <p><strong>Actuación:</strong> ${p.actuacion_recomendada || "-"}</p>
+    `;
+    lista.appendChild(item);
+  });
+}
+
+async function cargarDocumentos() {
+  const res = await fetch("/api/documentos");
+  const documentos = await res.json();
+
+  const lista = document.getElementById("listaDocumentos");
+  lista.innerHTML = "";
+
+  documentos.forEach(doc => {
+    const item = document.createElement("div");
+    item.className = "item-bloque";
+    item.innerHTML = `
+      <p><strong>${doc.titulo}</strong></p>
+      <p><strong>Tipo:</strong> ${doc.tipo_documento}</p>
+      <p><strong>Archivo:</strong> ${doc.archivo_nombre}</p>
+      <p><strong>Revisión:</strong> ${doc.revision}</p>
+      <p>${doc.descripcion || ""}</p>
+    `;
+    lista.appendChild(item);
+  });
+}
+
+async function cargarUnidades() {
+  const res = await fetch("/api/unidades-basicas");
+  const unidades = await res.json();
+
+  const lista = document.getElementById("listaUnidades");
+  lista.innerHTML = "";
+
+  unidades.forEach(ub => {
+    const item = document.createElement("div");
+    item.className = "item-bloque";
+    item.innerHTML = `
+      <p><strong>${ub.nombre}</strong></p>
+      <p><strong>Coordinador:</strong> ${ub.coordinador}</p>
+      <p><strong>Cargo:</strong> ${ub.cargo}</p>
+      <p>${ub.descripcion}</p>
+    `;
+    lista.appendChild(item);
+  });
+}
+
+async function cargarAcciones() {
+  const res = await fetch("/api/acciones-escenario");
+  const acciones = await res.json();
+
+  const lista = document.getElementById("listaAcciones");
+  lista.innerHTML = "";
+
+  acciones.forEach(acc => {
+    const item = document.createElement("div");
+    item.className = "item-bloque";
+    item.innerHTML = `
+      <div class="codigo">${acc.riesgo} · ${acc.nivel}</div>
+      <p><strong>Situación:</strong> ${acc.situacion}</p>
+      <p><strong>Unidad ID:</strong> ${acc.unidad_basica_id}</p>
+      <p><strong>Acción:</strong> ${acc.accion}</p>
+      <p><strong>Prioridad:</strong> ${acc.prioridad}</p>
+      <p><strong>Mensaje:</strong> ${acc.mensaje_predefinido}</p>
     `;
     lista.appendChild(item);
   });
@@ -153,9 +232,7 @@ async function guardarPunto(event) {
   }
 
   mensaje.textContent = "Punto guardado correctamente";
-
   document.getElementById("formPunto").reset();
-
   await cargarPuntos();
 }
 
