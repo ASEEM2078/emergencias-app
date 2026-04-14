@@ -7,13 +7,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, "data", "db.json");
 const municipio = {
-  nombre: "Benafer",
-  centro: {
-    lat: 39.935,
-    lng: -0.603
+const puntosPlan = [
+  {
+    nombre: "Ayuntamiento",
+    tipo: "edificio",
+    lat: 39.934,
+    lng: -0.602
   },
-  zoom: 14
-};
+  {
+    nombre: "Centro de salud",
+    tipo: "sanitario",
+    lat: 39.936,
+    lng: -0.604
+  },
+  {
+    nombre: "Zona inundable barranco",
+    tipo: "riesgo",
+    lat: 39.937,
+    lng: -0.607
+  }
+];
 
 app.use(cors());const DB_FILE = path.join(__dirname, "data", "db.json");
 app.use(express.json());
@@ -56,9 +69,8 @@ app.get("/api/estado", async (req, res) => {
 app.get("/api/municipio", (req, res) => {
   res.json(municipio);
 });
-app.get("/api/tareas", async (req, res) => {
-  const db = await readDB();
-  res.json(db.tareas);
+app.get("/api/puntos", (req, res) => {
+  res.json(puntosPlan);
 });
 
 app.post("/api/activar", async (req, res) => {
