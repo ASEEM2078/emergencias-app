@@ -1,6 +1,8 @@
 let map;
 let markersTareas = [];
 let markersPuntos = [];
+let modoAgregarPunto = false;
+let marcadorTemporal = null;
 
 window.onload = async () => {
   const resMunicipio = await fetch("/api/municipio");
@@ -19,11 +21,18 @@ window.onload = async () => {
     attribution: "&copy; OpenStreetMap contributors"
   }).addTo(map);
 
+  map.on("click", alHacerClickEnMapa);
+
   document.getElementById("activarBtn").addEventListener("click", activar);
   document.getElementById("formPunto").addEventListener("submit", guardarPunto);
-  document.getElementById("selectorRiesgo").addEventListener("change", cargarAcciones);
+  document.getElementById("selectorRiesgo").addEventListener("change", async () => {
+    await cargarAcciones();
+    await cargarPuntos();
+  });
   document.getElementById("selectorNivel").addEventListener("change", cargarAcciones);
+  document.getElementById("btnModoPunto").addEventListener("click", activarModoPunto);
 
+  await cargarRiesgos();
   await cargarEstado();
   await cargarTareas();
   await cargarPuntos();
@@ -31,6 +40,57 @@ window.onload = async () => {
   await cargarUnidades();
   await cargarAcciones();
 };
+
+async function cargarRiesgos() {
+  const res = await fetch("/api/riesgos");
+  const riesgos = await res.json();
+
+  const selector = document.getElementById("selectorRiesgo");
+  selector.innerHTML = "";
+
+  riesgos.forEach(r => {
+    const option = document.createElement("option");
+    option.value = r.codigo;
+    option.textContent = r.codigo;
+    selector.appendChild(option);
+  });
+
+  selector.value = "FMA";
+}
+
+function activarModoPunto() {
+  modoAgregarPunto = !modoAgregarPunto;
+  const btn = document.getElementById("btnModoPunto");
+  const mensaje = document.getElementById("mensajePunto");
+
+  if (modoAgregarPunto) {
+    btn.textContent = "Modo añadir punto ACTIVO";
+    mensaje.textContent = "Haz clic en el mapa para capturar latitud y longitud.";
+  } else {
+    btn.textContent = "Activar modo añadir punto";
+    mensaje.textContent = "";
+  }
+}
+
+function alHacerClickEnMapa(e) {
+  if (!modoAgregarPunto) return;
+
+  const { lat, lng } = e.latlng;
+
+  document.getElementById("puntoLat").value = lat.toFixed(6);
+  document.getElementById("puntoLng").value = lng.toFixed(6);
+
+  if (marcadorTemporal) {
+    map.removeLayer(marcadorTemporal);
+  }
+
+  marcadorTemporal = L.marker([lat, lng]).addTo(map)
+    .bindPopup("Nuevo punto en edición")
+    .openPopup();
+
+  document.getElementById("mensajePunto").textContent =
+    "Coordenadas capturadas. Completa el formulario y guarda.";
+}
 
 async function cargarEstado() {
   const res = await fetch("/api/estado");
@@ -60,6 +120,12 @@ async function cargarEstado() {
   }
 }
 
+function colorTarea(estado) {
+  if (estado === "realizada") return "green";
+  if (estado === "en_curso") return "orange";
+  return "red";
+}
+
 async function cargarTareas() {
   const res = await fetch("/api/tareas");
   const tareas = await res.json();
@@ -85,21 +151,21 @@ async function cargarTareas() {
       <p><strong>Prioridad:</strong> ${t.prioridad || "-"}</p>
       <p><strong>Estado:</strong> ${t.estado}</p>
       <p><strong>Mensaje:</strong> ${t.mensaje_predefinido || "-"}</p>
-      <button onclick="completar(${t.id})">Marcar realizada</button>
+      <button class="btn-estado btn-pendiente" onclick="cambiarEstadoTarea(${t.id}, 'pendiente')">Pendiente</button>
+      <button class="btn-estado btn-curso" onclick="cambiarEstadoTarea(${t.id}, 'en_curso')">En curso</button>
+      <button class="btn-estado btn-realizada" onclick="cambiarEstadoTarea(${t.id}, 'realizada')">Realizada</button>
     `;
 
     contenedor.appendChild(div);
 
-    const color = t.estado === "realizada" ? "green" : "red";
-
     const marker = L.circleMarker([t.lat, t.lng], {
-      color,
-      radius: 8,
+      color: colorTarea(t.estado),
+      radius: 9,
       weight: 3
     }).addTo(map);
 
     marker.bindPopup(
-      `<b>${t.titulo}</b><br>${t.grupo}<br>${t.estado}<br>${t.mensaje_predefinido || ""}`
+      `<b>${t.titulo}</b><br>${t.grupo}<br>Estado: ${t.estado}<br>${t.mensaje_predefinido || ""}`
     );
 
     markersTareas.push(marker);
@@ -107,7 +173,8 @@ async function cargarTareas() {
 }
 
 async function cargarPuntos() {
-  const res = await fetch("/api/puntos");
+  const riesgo = document.getElementById("selectorRiesgo").value || "FMA";
+  const res = await fetch(`/api/puntos?riesgo=${encodeURIComponent(riesgo)}`);
   const puntos = await res.json();
 
   const lista = document.getElementById("listaPuntos");
@@ -122,10 +189,18 @@ async function cargarPuntos() {
   }
 
   puntos.forEach(p => {
-    const marker = L.marker([p.lat, p.lng]).addTo(map);
+    const marker = L.circleMarker([p.lat, p.lng], {
+      color: "#2563eb",
+      radius: 7,
+      weight: 2,
+      fillColor: "#60a5fa",
+      fillOpacity: 0.9
+    }).addTo(map);
+
     marker.bindPopup(
-      `<b>${p.nombre}</b><br>${p.categoria}<br>${p.subcategoria}<br>${p.observaciones || ""}`
+      `<b>${p.nombre}</b><br>${p.codigo || ""}<br>${p.categoria}<br>${p.subcategoria}<br>Riesgo: ${p.riesgo_asociado || "GENERAL"}<br>${p.observaciones || ""}`
     );
+
     markersPuntos.push(marker);
 
     const item = document.createElement("div");
@@ -135,6 +210,7 @@ async function cargarPuntos() {
       <p><strong>${p.nombre}</strong></p>
       <p><strong>Categoría:</strong> ${p.categoria}</p>
       <p><strong>Subcategoría:</strong> ${p.subcategoria}</p>
+      <p><strong>Riesgo:</strong> ${p.riesgo_asociado || "GENERAL"}</p>
       <p>${p.descripcion || ""}</p>
       <p><strong>Actuación:</strong> ${p.actuacion_recomendada || "-"}</p>
     `;
@@ -219,6 +295,7 @@ async function guardarPunto(event) {
 
   const nombre = document.getElementById("puntoNombre").value;
   const tipo = document.getElementById("puntoTipo").value;
+  const riesgo_asociado = document.getElementById("puntoRiesgo").value;
   const descripcion = document.getElementById("puntoDescripcion").value;
   const lat = document.getElementById("puntoLat").value;
   const lng = document.getElementById("puntoLng").value;
@@ -234,6 +311,7 @@ async function guardarPunto(event) {
     body: JSON.stringify({
       nombre,
       tipo,
+      riesgo_asociado,
       descripcion,
       lat,
       lng
@@ -249,6 +327,15 @@ async function guardarPunto(event) {
 
   mensaje.textContent = "Punto guardado correctamente";
   document.getElementById("formPunto").reset();
+
+  if (marcadorTemporal) {
+    map.removeLayer(marcadorTemporal);
+    marcadorTemporal = null;
+  }
+
+  modoAgregarPunto = false;
+  document.getElementById("btnModoPunto").textContent = "Activar modo añadir punto";
+
   await cargarPuntos();
 }
 
@@ -280,15 +367,14 @@ async function activar() {
   await cargarEstado();
   await cargarTareas();
   await cargarAcciones();
+  await cargarPuntos();
 }
 
-async function completar(id) {
+async function cambiarEstadoTarea(id, estado) {
   await fetch(`/api/tareas/${id}/estado`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      estado: "realizada"
-    })
+    body: JSON.stringify({ estado })
   });
 
   await cargarTareas();
