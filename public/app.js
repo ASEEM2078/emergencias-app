@@ -21,6 +21,8 @@ window.onload = async () => {
 
   document.getElementById("activarBtn").addEventListener("click", activar);
   document.getElementById("formPunto").addEventListener("submit", guardarPunto);
+  document.getElementById("selectorRiesgo").addEventListener("change", cargarAcciones);
+  document.getElementById("selectorNivel").addEventListener("change", cargarAcciones);
 
   await cargarEstado();
   await cargarTareas();
@@ -80,7 +82,9 @@ async function cargarTareas() {
     div.innerHTML = `
       <p><strong>${t.titulo}</strong></p>
       <p><strong>Grupo:</strong> ${t.grupo}</p>
+      <p><strong>Prioridad:</strong> ${t.prioridad || "-"}</p>
       <p><strong>Estado:</strong> ${t.estado}</p>
+      <p><strong>Mensaje:</strong> ${t.mensaje_predefinido || "-"}</p>
       <button onclick="completar(${t.id})">Marcar realizada</button>
     `;
 
@@ -94,7 +98,10 @@ async function cargarTareas() {
       weight: 3
     }).addTo(map);
 
-    marker.bindPopup(`<b>${t.titulo}</b><br>${t.grupo}<br>${t.estado}`);
+    marker.bindPopup(
+      `<b>${t.titulo}</b><br>${t.grupo}<br>${t.estado}<br>${t.mensaje_predefinido || ""}`
+    );
+
     markersTareas.push(marker);
   });
 }
@@ -177,11 +184,19 @@ async function cargarUnidades() {
 }
 
 async function cargarAcciones() {
-  const res = await fetch("/api/acciones-escenario");
+  const riesgo = document.getElementById("selectorRiesgo").value;
+  const nivel = document.getElementById("selectorNivel").value;
+
+  const res = await fetch(`/api/acciones-escenario?riesgo=${encodeURIComponent(riesgo)}&nivel=${encodeURIComponent(nivel)}`);
   const acciones = await res.json();
 
   const lista = document.getElementById("listaAcciones");
   lista.innerHTML = "";
+
+  if (acciones.length === 0) {
+    lista.innerHTML = "<p>No hay acciones definidas para este escenario.</p>";
+    return;
+  }
 
   acciones.forEach(acc => {
     const item = document.createElement("div");
@@ -190,6 +205,7 @@ async function cargarAcciones() {
       <div class="codigo">${acc.riesgo} · ${acc.nivel}</div>
       <p><strong>Situación:</strong> ${acc.situacion}</p>
       <p><strong>Unidad ID:</strong> ${acc.unidad_basica_id}</p>
+      <p><strong>Punto:</strong> ${acc.punto_plan_codigo || "-"}</p>
       <p><strong>Acción:</strong> ${acc.accion}</p>
       <p><strong>Prioridad:</strong> ${acc.prioridad}</p>
       <p><strong>Mensaje:</strong> ${acc.mensaje_predefinido}</p>
@@ -237,17 +253,33 @@ async function guardarPunto(event) {
 }
 
 async function activar() {
-  await fetch("/api/activar", {
+  const riesgo = document.getElementById("selectorRiesgo").value;
+  const nivel = document.getElementById("selectorNivel").value;
+  const mensaje = document.getElementById("mensajeActivacion");
+
+  mensaje.textContent = "Activando escenario...";
+
+  const res = await fetch("/api/activar", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      tipo: "lluvias",
-      nivel: "amarillo"
+      tipo: riesgo,
+      nivel
     })
   });
 
+  const data = await res.json();
+
+  if (!res.ok) {
+    mensaje.textContent = data.mensaje || "Error en la activación";
+    return;
+  }
+
+  mensaje.textContent = `Escenario activado. Tareas generadas: ${data.tareas_generadas}`;
+
   await cargarEstado();
   await cargarTareas();
+  await cargarAcciones();
 }
 
 async function completar(id) {
