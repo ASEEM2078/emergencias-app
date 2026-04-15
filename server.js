@@ -120,6 +120,7 @@ const accionesEscenarioIniciales = [
     nivel: "amarillo",
     situacion: "preemergencia",
     unidad_basica_id: 1,
+    punto_plan_codigo: "PCV-1",
     accion: "Seguimiento visual de cauces, puntos de vigilancia y puntos conflictivos en vías de comunicación",
     prioridad: "alta",
     mensaje_predefinido: "Realizar seguimiento de cauces y puntos críticos; comunicar evolución al CECOPAL.",
@@ -131,6 +132,7 @@ const accionesEscenarioIniciales = [
     nivel: "amarillo",
     situacion: "preemergencia",
     unidad_basica_id: 3,
+    punto_plan_codigo: "PCV-4",
     accion: "Preparación de vallas, barreras, material de señalización y revisión de equipos de achique",
     prioridad: "alta",
     mensaje_predefinido: "Preparar vallas, bombas de achique y material de intervención preventiva.",
@@ -142,6 +144,7 @@ const accionesEscenarioIniciales = [
     nivel: "naranja",
     situacion: "situacion_0",
     unidad_basica_id: 1,
+    punto_plan_codigo: "PCV-5",
     accion: "Control de accesos, avisos a la población y alejamiento preventivo en zonas de peligro inminente",
     prioridad: "muy alta",
     mensaje_predefinido: "Activar control de accesos y avisos preventivos a población en zonas potencialmente afectadas.",
@@ -153,6 +156,7 @@ const accionesEscenarioIniciales = [
     nivel: "naranja",
     situacion: "situacion_0",
     unidad_basica_id: 3,
+    punto_plan_codigo: "PCV-9",
     accion: "Limpieza preventiva, levantamiento de diques provisionales y eliminación de obstáculos",
     prioridad: "muy alta",
     mensaje_predefinido: "Actuar en limpieza preventiva y despeje de puntos críticos de escorrentía.",
@@ -164,6 +168,7 @@ const accionesEscenarioIniciales = [
     nivel: "rojo",
     situacion: "situacion_1_2",
     unidad_basica_id: 4,
+    punto_plan_codigo: "PCV-2",
     accion: "Gestión de albergue y asistencia de evacuados",
     prioridad: "muy alta",
     mensaje_predefinido: "Preparar recepción y asistencia de evacuados y grupos vulnerables.",
@@ -175,6 +180,7 @@ const accionesEscenarioIniciales = [
     nivel: "rojo",
     situacion: "situacion_1_2",
     unidad_basica_id: 5,
+    punto_plan_codigo: "PCV-2",
     accion: "Asistencia sanitaria, control de epidemias e intoxicaciones y necesidades farmacéuticas",
     prioridad: "muy alta",
     mensaje_predefinido: "Activar atención sanitaria y seguimiento de necesidades asistenciales.",
@@ -317,7 +323,19 @@ app.get("/api/unidades-basicas", async (req, res) => {
 
 app.get("/api/acciones-escenario", async (req, res) => {
   const db = await readDB();
-  res.json(db.acciones_escenario || []);
+  const { riesgo, nivel } = req.query;
+
+  let acciones = db.acciones_escenario || [];
+
+  if (riesgo) {
+    acciones = acciones.filter(a => a.riesgo === riesgo);
+  }
+
+  if (nivel) {
+    acciones = acciones.filter(a => a.nivel === nivel);
+  }
+
+  res.json(acciones);
 });
 
 app.get("/api/puntos", async (req, res) => {
@@ -392,34 +410,49 @@ app.post("/api/activar", async (req, res) => {
     fecha: new Date().toISOString()
   };
 
-  db.tareas = [
-    {
-      id: 1,
-      titulo: "Revisar Barranco Rambla Castelar",
-      grupo: "U.B. Seguridad",
-      lat: 38.2541842,
-      lng: -0.8175068,
-      estado: "pendiente"
-    },
-    {
-      id: 2,
-      titulo: "Preparar vallas y limpieza preventiva en zona urbana",
-      grupo: "U.B. Apoyo Logístico",
-      lat: 38.2442911,
-      lng: -0.8109760,
-      estado: "pendiente"
-    }
-  ];
+  const accionesFiltradas = (db.acciones_escenario || []).filter(
+    accion => accion.riesgo === tipo && accion.nivel === nivel
+  );
+
+  const tareasGeneradas = accionesFiltradas.map((accion, index) => {
+    const unidad = (db.unidades_basicas || []).find(
+      ub => ub.id === accion.unidad_basica_id
+    );
+
+    const punto = (db.puntos || []).find(
+      p => p.codigo === accion.punto_plan_codigo
+    );
+
+    return {
+      id: Date.now() + index,
+      accion_escenario_id: accion.id,
+      unidad_basica_id: accion.unidad_basica_id,
+      punto_plan_codigo: accion.punto_plan_codigo || null,
+      titulo: accion.accion,
+      grupo: unidad ? unidad.nombre : "Unidad no definida",
+      mensaje_predefinido: accion.mensaje_predefinido,
+      prioridad: accion.prioridad,
+      estado: "pendiente",
+      lat: punto ? punto.lat : municipio.centro.lat,
+      lng: punto ? punto.lng : municipio.centro.lng
+    };
+  });
+
+  db.tareas = tareasGeneradas;
 
   db.logs.push({
     fecha: new Date().toISOString(),
     accion: "activacion",
-    detalle: `Activada ${tipo} nivel ${nivel}`
+    detalle: `Activada ${tipo} nivel ${nivel}. Tareas generadas: ${tareasGeneradas.length}`
   });
 
   await writeDB(db);
 
-  res.json({ ok: true, mensaje: "Emergencia activada" });
+  res.json({
+    ok: true,
+    mensaje: "Emergencia activada",
+    tareas_generadas: tareasGeneradas.length
+  });
 });
 
 app.post("/api/tareas/:id/estado", async (req, res) => {
