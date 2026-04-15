@@ -19,6 +19,13 @@ const municipio = {
   zoom: 13
 };
 
+const riesgosIniciales = [
+  { id: 1, codigo: "FMA", nombre: "Fenómenos Meteorológicos Adversos" },
+  { id: 2, codigo: "INUNDACIONES", nombre: "Inundaciones" },
+  { id: 3, codigo: "SISMICO", nombre: "Riesgo Sísmico" },
+  { id: 4, codigo: "IF", nombre: "Incendios Forestales" }
+];
+
 const documentosFuenteIniciales = [
   {
     id: 1,
@@ -164,27 +171,51 @@ const accionesEscenarioIniciales = [
   },
   {
     id: 5,
-    riesgo: "FMA",
-    nivel: "rojo",
-    situacion: "situacion_1_2",
-    unidad_basica_id: 4,
-    punto_plan_codigo: "PCV-2",
-    accion: "Gestión de albergue y asistencia de evacuados",
+    riesgo: "INUNDACIONES",
+    nivel: "naranja",
+    situacion: "situacion_1",
+    unidad_basica_id: 1,
+    punto_plan_codigo: "PCV-5",
+    accion: "Control de tráfico y accesos en zonas inundables urbanas",
     prioridad: "muy alta",
-    mensaje_predefinido: "Preparar recepción y asistencia de evacuados y grupos vulnerables.",
-    documento_fuente_id: 2
+    mensaje_predefinido: "Restringir accesos y señalizar zonas de inundación urbana.",
+    documento_fuente_id: 1
   },
   {
     id: 6,
-    riesgo: "FMA",
+    riesgo: "INUNDACIONES",
     nivel: "rojo",
-    situacion: "situacion_1_2",
-    unidad_basica_id: 5,
+    situacion: "situacion_2",
+    unidad_basica_id: 4,
     punto_plan_codigo: "PCV-2",
-    accion: "Asistencia sanitaria, control de epidemias e intoxicaciones y necesidades farmacéuticas",
+    accion: "Preparar albergue y recepción de evacuados",
     prioridad: "muy alta",
-    mensaje_predefinido: "Activar atención sanitaria y seguimiento de necesidades asistenciales.",
-    documento_fuente_id: 2
+    mensaje_predefinido: "Preparar albergue, grupos vulnerables y recepción de evacuados.",
+    documento_fuente_id: 1
+  },
+  {
+    id: 7,
+    riesgo: "SISMICO",
+    nivel: "rojo",
+    situacion: "emergencia",
+    unidad_basica_id: 6,
+    punto_plan_codigo: "SEI-1",
+    accion: "Evaluación rápida de daños en zona prioritaria",
+    prioridad: "muy alta",
+    mensaje_predefinido: "Realizar evaluación rápida de daños y reportar afecciones estructurales.",
+    documento_fuente_id: 4
+  },
+  {
+    id: 8,
+    riesgo: "IF",
+    nivel: "naranja",
+    situacion: "preemergencia",
+    unidad_basica_id: 1,
+    punto_plan_codigo: "IF-1",
+    accion: "Vigilancia de interfaz urbano-forestal y control preventivo de accesos",
+    prioridad: "alta",
+    mensaje_predefinido: "Reforzar vigilancia en interfaz urbano-forestal y limitar accesos si es necesario.",
+    documento_fuente_id: 1
   }
 ];
 
@@ -195,6 +226,7 @@ const puntosPlanIniciales = [
     nombre: "Aliviadero de la Presa del Embalse de la Garganta",
     categoria: "punto_critico_vigilancia",
     subcategoria: "barranco",
+    riesgo_asociado: "FMA",
     lat: 38.267938,
     lng: -0.784919,
     descripcion: "Punto de referencia",
@@ -208,6 +240,7 @@ const puntosPlanIniciales = [
     nombre: "Barranco del Boch",
     categoria: "punto_critico_vigilancia",
     subcategoria: "via_comunicacion",
+    riesgo_asociado: "INUNDACIONES",
     lat: 38.230353,
     lng: -0.789608,
     descripcion: "Cruce del barranco con acceso a la A-7. Carretera de la Estación",
@@ -221,6 +254,7 @@ const puntosPlanIniciales = [
     nombre: "Barranco Rambla Castelar",
     categoria: "punto_critico_vigilancia",
     subcategoria: "desbordamiento",
+    riesgo_asociado: "FMA",
     lat: 38.2541842,
     lng: -0.8175068,
     descripcion: "Canalización del Barranco de la Rambla",
@@ -234,6 +268,7 @@ const puntosPlanIniciales = [
     nombre: "Rambla urbanizada",
     categoria: "punto_critico_vigilancia",
     subcategoria: "zona_urbana",
+    riesgo_asociado: "INUNDACIONES",
     lat: 38.2442911,
     lng: -0.8109760,
     descripcion: "Zona urbanizada con afección en puente Jorge Juan y Avda. de Madrid",
@@ -247,12 +282,41 @@ const puntosPlanIniciales = [
     nombre: "Barranco Amorós",
     categoria: "punto_critico_vigilancia",
     subcategoria: "tramo_inundable",
+    riesgo_asociado: "INUNDACIONES",
     lat: 38.217527,
     lng: -0.832062,
     descripcion: "Situado en intersección N-340 dirección Albatera",
     observaciones: "Puede desbordarse sobre la N-340 e impedir la circulación",
     actuacion_recomendada: "Limpieza preventiva",
     documento_fuente_id: 3
+  },
+  {
+    id: 6,
+    codigo: "SEI-1",
+    nombre: "Distrito 2 Sección 3",
+    categoria: "sitio_especial_interes",
+    subcategoria: "sector_sismico",
+    riesgo_asociado: "SISMICO",
+    lat: 38.2565,
+    lng: -0.8125,
+    descripcion: "Zona prioritaria de evaluación postsismo",
+    observaciones: "Prioridad de revisión de sitios de especial interés en horario lectivo",
+    actuacion_recomendada: "Inspección rápida y cumplimentación de ficha postsismo",
+    documento_fuente_id: 4
+  },
+  {
+    id: 7,
+    codigo: "IF-1",
+    nombre: "Interfaz urbano-forestal Campillos",
+    categoria: "punto_control",
+    subcategoria: "interfaz_urbano_forestal",
+    riesgo_asociado: "IF",
+    lat: 38.2425,
+    lng: -0.8360,
+    descripcion: "Zona de vigilancia por riesgo de incendio forestal",
+    observaciones: "Viviendas dispersas y cercanía a masa forestal",
+    actuacion_recomendada: "Vigilancia y control preventivo de accesos",
+    documento_fuente_id: 1
   }
 ];
 
@@ -276,6 +340,7 @@ async function initDB() {
         },
         tareas: [],
         puntos: puntosPlanIniciales,
+        riesgos: riesgosIniciales,
         documentos_fuente: documentosFuenteIniciales,
         unidades_basicas: unidadesBasicasIniciales,
         acciones_escenario: accionesEscenarioIniciales,
@@ -291,6 +356,7 @@ async function initDB() {
   if (!db.emergencia) db.emergencia = { activa: false, tipo: null, nivel: null, fecha: null };
   if (!db.tareas) db.tareas = [];
   if (!db.puntos) db.puntos = puntosPlanIniciales;
+  if (!db.riesgos) db.riesgos = riesgosIniciales;
   if (!db.documentos_fuente) db.documentos_fuente = documentosFuenteIniciales;
   if (!db.unidades_basicas) db.unidades_basicas = unidadesBasicasIniciales;
   if (!db.acciones_escenario) db.acciones_escenario = accionesEscenarioIniciales;
@@ -309,6 +375,11 @@ async function writeDB(data) {
 
 app.get("/api/municipio", (req, res) => {
   res.json(municipio);
+});
+
+app.get("/api/riesgos", async (req, res) => {
+  const db = await readDB();
+  res.json(db.riesgos || []);
 });
 
 app.get("/api/documentos", async (req, res) => {
@@ -340,11 +411,21 @@ app.get("/api/acciones-escenario", async (req, res) => {
 
 app.get("/api/puntos", async (req, res) => {
   const db = await readDB();
-  res.json(db.puntos || []);
+  const { riesgo } = req.query;
+
+  let puntos = db.puntos || [];
+
+  if (riesgo && riesgo !== "TODOS") {
+    puntos = puntos.filter(
+      p => !p.riesgo_asociado || p.riesgo_asociado === riesgo || p.riesgo_asociado === "GENERAL"
+    );
+  }
+
+  res.json(puntos);
 });
 
 app.post("/api/puntos", async (req, res) => {
-  const { nombre, tipo, descripcion, lat, lng } = req.body;
+  const { nombre, tipo, descripcion, lat, lng, riesgo_asociado } = req.body;
 
   if (!nombre || !tipo || lat === undefined || lng === undefined) {
     return res.status(400).json({
@@ -361,6 +442,7 @@ app.post("/api/puntos", async (req, res) => {
     nombre: String(nombre).trim(),
     categoria: "punto_interes",
     subcategoria: String(tipo).trim(),
+    riesgo_asociado: riesgo_asociado ? String(riesgo_asociado).trim() : "GENERAL",
     descripcion: descripcion ? String(descripcion).trim() : "",
     observaciones: "",
     actuacion_recomendada: "",
