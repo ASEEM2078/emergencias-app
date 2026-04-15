@@ -61,8 +61,28 @@ body {
   font-size: 20px;
 }
 
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+}
+
 .btn-principal,
 .btn-secundario,
+.btn-estado,
 .tarea button {
   border: none;
   border-radius: 10px;
@@ -82,6 +102,28 @@ body {
   color: white;
   width: 100%;
   margin-top: 8px;
+}
+
+.btn-estado {
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-right: 6px;
+  margin-top: 8px;
+}
+
+.btn-pendiente {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-curso {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-realizada {
+  background: #16a34a;
+  color: white;
 }
 
 .estado-visual {
@@ -117,33 +159,9 @@ body {
   margin: 6px 0;
 }
 
-.tarea button {
-  background: #16a34a;
-  color: white;
-  margin-top: 8px;
-}
-
 .form-grid {
   display: grid;
   gap: 12px;
-}
-
-.form-grid label {
-  display: grid;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.form-grid input,
-.form-grid select,
-.form-grid textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 14px;
-  background: white;
 }
 
 .mensaje {
@@ -189,6 +207,39 @@ body {
   font-size: 12px;
   font-weight: bold;
   margin-bottom: 8px;
+}
+
+.leyenda-mapa {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.dot-blue {
+  background: #2563eb;
+}
+
+.dot-red {
+  background: #dc2626;
+}
+
+.dot-yellow {
+  background: #f59e0b;
+}
+
+.dot-green {
+  background: #16a34a;
 }
 
 @media (max-width: 980px) {
