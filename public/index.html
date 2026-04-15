@@ -20,7 +20,25 @@
     <section class="panel panel-izquierda">
       <div class="card">
         <h2>Activación</h2>
-        <button id="activarBtn" class="btn-principal">Activar lluvias nivel amarillo</button>
+
+        <label>
+          Riesgo
+          <select id="selectorRiesgo">
+            <option value="FMA">FMA</option>
+          </select>
+        </label>
+
+        <label>
+          Nivel
+          <select id="selectorNivel">
+            <option value="amarillo">amarillo</option>
+            <option value="naranja">naranja</option>
+            <option value="rojo">rojo</option>
+          </select>
+        </label>
+
+        <button id="activarBtn" class="btn-principal">Activar escenario</button>
+        <p id="mensajeActivacion" class="mensaje"></p>
       </div>
 
       <div class="card">
@@ -92,7 +110,7 @@
         </div>
 
         <div class="card">
-          <h2>Acciones por escenario</h2>
+          <h2>Acciones del escenario seleccionado</h2>
           <div id="listaAcciones"></div>
         </div>
 
